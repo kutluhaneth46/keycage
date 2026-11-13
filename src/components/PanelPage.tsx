@@ -2,6 +2,8 @@
 
 import { useMemo, useState, useTransition } from "react";
 import Link from "next/link";
+import { ChainKeys } from "@/components/ChainKeys";
+import { CountUp } from "@/components/CountUp";
 import { SiteFooter, SiteHeader, usePageTitle } from "@/components/SiteChrome";
 import {
   displayLabel,
@@ -259,6 +261,7 @@ export function PanelPage() {
               aria-pressed={tab === id}
               onClick={() => setTab(id)}
             >
+              <NavIcon id={id} />
               {label}
             </button>
           ))}
@@ -266,8 +269,15 @@ export function PanelPage() {
         <div className="panel-main">
           {tab === "attack" ? (
             <article className="card">
-              <p className="kicker">{t.panelTitle}</p>
+              <div className="title-row">
+                <p className="kicker">{t.panelTitle}</p>
+                <span className={`status-pill${cage.ledger.length ? " is-live" : ""}`}>
+                  <i />
+                  {cage.ledger.length ? t.statusLive : t.statusReady}
+                </span>
+              </div>
               <h1 className="section-title">{t.tabAttack}</h1>
+              <p className="section-copy">{t.simRun}</p>
               <p className="section-copy">{t.judgeCopy}</p>
               <div className="actions">
                 <button className="btn btn-primary" type="button" onClick={runLocalSuite} disabled={pending || serverBusy}>
@@ -299,11 +309,15 @@ export function PanelPage() {
               <div className="counts" style={{ marginTop: 16 }}>
                 <div className="count ok">
                   <p>{t.allowed}</p>
-                  <strong>{allowedCount}</strong>
+                  <strong>
+                    <CountUp value={allowedCount} />
+                  </strong>
                 </div>
                 <div className="count deny">
                   <p>{t.blocked}</p>
-                  <strong>{blockedCount}</strong>
+                  <strong>
+                    <CountUp value={blockedCount} />
+                  </strong>
                 </div>
               </div>
               <p className="section-copy">
@@ -319,7 +333,15 @@ export function PanelPage() {
                   ))}
                 </ol>
               ) : (
-                <p className="verdict-empty">{t.railEmpty}</p>
+                <div className="empty-log">
+                  <span className="empty-mark" aria-hidden="true">
+                    <svg viewBox="0 0 24 24">
+                      <rect x="4" y="5" width="16" height="14" rx="2" fill="none" stroke="currentColor" strokeWidth="1.8" />
+                      <path d="M8 10h8M8 14h5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+                    </svg>
+                  </span>
+                  <p>{t.railEmpty}</p>
+                </div>
               )}
             </article>
           ) : null}
@@ -423,7 +445,15 @@ export function PanelPage() {
               </div>
               <div className="log-list" aria-live="polite" aria-busy={serverBusy || pending}>
                 {cage.ledger.length === 0 ? (
-                  <div className="empty-log">{t.empty}</div>
+                  <div className="empty-log">
+                    <span className="empty-mark" aria-hidden="true">
+                      <svg viewBox="0 0 24 24">
+                        <path d="M5 7h14v11H5z" fill="none" stroke="currentColor" strokeWidth="1.8" />
+                        <path d="M8 7V5h8v2" fill="none" stroke="currentColor" strokeWidth="1.8" />
+                      </svg>
+                    </span>
+                    <p>{t.empty}</p>
+                  </div>
                 ) : (
                   cage.ledger.map((entry, index) => (
                     <LogRow key={entry.attempt.id} entry={entry} policy={cage.policy} index={index} />
@@ -464,11 +494,18 @@ export function PanelPage() {
           ) : null}
 
           {tab === "draft" ? (
-            <article className="card draft">
-              <h1 className="section-title">{t.draft}</h1>
-              <p className="section-copy">{t.draftCopy}</p>
-              <pre className="mono">{JSON.stringify(keyDraft, null, 2)}</pre>
-            </article>
+            <div className="stack">
+              <article className="card draft">
+                <span className="status-pill">
+                  <i />
+                  {t.simPill}
+                </span>
+                <h1 className="section-title">{t.draft}</h1>
+                <p className="section-copy">{t.draftCopy}</p>
+                <pre className="mono">{JSON.stringify(keyDraft, null, 2)}</pre>
+              </article>
+              <ChainKeys policy={cage.policy} />
+            </div>
           ) : null}
         </div>
       </div>
@@ -524,6 +561,60 @@ function LogRow({ entry, policy, index }: { entry: LedgerEntry; policy: Policy; 
       </p>
       <p className="log-reason">{displayReason(lang, entry, policy)}</p>
     </article>
+  );
+}
+
+function NavIcon({ id }: { id: Tab }) {
+  const common = {
+    viewBox: "0 0 24 24",
+    fill: "none",
+    stroke: "currentColor",
+    strokeWidth: 1.8,
+    strokeLinecap: "round" as const,
+    strokeLinejoin: "round" as const,
+    "aria-hidden": true,
+  };
+  if (id === "attack") {
+    return (
+      <svg {...common}>
+        <path d="M5 19V10M12 19V5M19 19v-7" />
+      </svg>
+    );
+  }
+  if (id === "fence") {
+    return (
+      <svg {...common}>
+        <path d="M5 4v16M10 4v16M15 4v16M19 4v16M4 8h16M4 14h16" />
+      </svg>
+    );
+  }
+  if (id === "spend") {
+    return (
+      <svg {...common}>
+        <circle cx="12" cy="12" r="7" />
+        <path d="M12 8v8M9 11h6" />
+      </svg>
+    );
+  }
+  if (id === "log") {
+    return (
+      <svg {...common}>
+        <path d="M7 4h10v16H7zM10 8h4M10 12h4M10 16h3" />
+      </svg>
+    );
+  }
+  if (id === "judge") {
+    return (
+      <svg {...common}>
+        <path d="M6 8l6-4 6 4v5c0 4-2.5 6.5-6 8-3.5-1.5-6-4-6-8V8z" />
+      </svg>
+    );
+  }
+  return (
+    <svg {...common}>
+      <circle cx="8" cy="12" r="3" />
+      <path d="M11 12h9M17 9v6" />
+    </svg>
   );
 }
 

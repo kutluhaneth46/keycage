@@ -53,6 +53,10 @@ export function SiteFooter() {
   return (
     <footer className="footer">
       <p>{t.footerLine}</p>
+      <div className="footer-end">
+        <a className="footer-code" href="https://github.com/kutluhaneth46/keycage" target="_blank" rel="noreferrer">
+          {t.gitText}
+        </a>
       <nav className="footer-links" aria-label="KutluhanETH">
         <a href="https://kutluhaneth.com" target="_blank" rel="noreferrer" aria-label={t.siteLabel}>
           <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -87,6 +91,7 @@ export function SiteFooter() {
           </svg>
         </a>
       </nav>
+      </div>
     </footer>
   );
 }

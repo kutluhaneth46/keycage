@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { CountUp } from "@/components/CountUp";
 import { DotField } from "@/components/DotField";
 import { HeroCage } from "@/components/HeroCage";
 import { FaqList, SiteFooter, SiteHeader, usePageTitle } from "@/components/SiteChrome";
@@ -29,13 +30,26 @@ export function HomePage() {
               {t.openPanel}
             </Link>
           </div>
-          <ul className="chips" aria-label={t.chipsLabel}>
-            <li>{t.chipReceivers}</li>
-            <li>{t.chipMethods}</li>
-            <li>{t.chipTx}</li>
-            <li>{t.chipDaily}</li>
-            <li>{t.chipGas}</li>
-          </ul>
+          <div className="stats" aria-label={t.statsLabel}>
+            <p className="stat">
+              <strong>
+                <CountUp value={6} />
+              </strong>
+              <span>{t.statAttempts}</span>
+            </p>
+            <p className="stat is-allow">
+              <strong>
+                <CountUp value={2} />
+              </strong>
+              <span>{t.allowed}</span>
+            </p>
+            <p className="stat is-block">
+              <strong>
+                <CountUp value={4} />
+              </strong>
+              <span>{t.blocked}</span>
+            </p>
+          </div>
         </div>
         <div className="hero-visual">
           <HeroCage
@@ -54,24 +68,43 @@ export function HomePage() {
         </div>
       </section>
 
-      <section className="section" id="steps">
+      <section className="section" id="steps" aria-labelledby="how-title">
+        <div className="section-head">
+          <h2 className="section-title" id="how-title">
+            {t.howTitle}
+          </h2>
+          <p className="section-copy">{t.howCopy}</p>
+        </div>
         <ol className="steps">
           <li className="step">
-            <span className="step-index">01</span>
+            <span className="card-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                <path d="M4 8h16M4 12h10M4 16h7" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+              </svg>
+            </span>
             <div>
               <h2>{t.step1t}</h2>
               <p>{t.step1b}</p>
             </div>
           </li>
           <li className="step">
-            <span className="step-index">02</span>
+            <span className="card-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                <circle cx="8" cy="12" r="3" fill="none" stroke="currentColor" strokeWidth="1.8" />
+                <path d="M11 12h9M17 9v6" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+              </svg>
+            </span>
             <div>
               <h2>{t.step2t}</h2>
               <p>{t.step2b}</p>
             </div>
           </li>
           <li className="step">
-            <span className="step-index">03</span>
+            <span className="card-icon is-block" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                <path d="M6 12l4 4 8-8" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </span>
             <div>
               <h2>{t.step3t}</h2>
               <p>{t.step3b}</p>
@@ -118,6 +151,12 @@ export function HomePage() {
         </div>
         <div className="cases">
           <article className="case case-treasury">
+            <span className="card-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                <rect x="3" y="6" width="18" height="12" rx="2" fill="none" stroke="currentColor" strokeWidth="1.8" />
+                <path d="M3 10h18" fill="none" stroke="currentColor" strokeWidth="1.8" />
+              </svg>
+            </span>
             <p className="kicker">{t.example}</p>
             <h3>{t.caseTreasuryT}</h3>
             <p>{t.caseTreasuryB}</p>
@@ -127,6 +166,13 @@ export function HomePage() {
             </div>
           </article>
           <article className="case case-payroll">
+            <span className="card-icon is-block" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                <circle cx="8" cy="9" r="2.2" fill="none" stroke="currentColor" strokeWidth="1.8" />
+                <circle cx="16" cy="9" r="2.2" fill="none" stroke="currentColor" strokeWidth="1.8" />
+                <path d="M4 18c.6-2.4 2.4-3.5 4-3.5s3.4 1.1 4 3.5M12 18c.6-2.4 2.4-3.5 4-3.5s3.4 1.1 4 3.5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+              </svg>
+            </span>
             <p className="kicker">{t.example}</p>
             <h3>{t.casePayrollT}</h3>
             <p>{t.casePayrollB}</p>
@@ -137,6 +183,12 @@ export function HomePage() {
             </div>
           </article>
           <article className="case case-research">
+            <span className="card-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                <circle cx="11" cy="11" r="6" fill="none" stroke="currentColor" strokeWidth="1.8" />
+                <path d="M16 16l4 4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+              </svg>
+            </span>
             <p className="kicker">{t.example}</p>
             <h3>{t.caseResearchT}</h3>
             <p>{t.caseResearchB}</p>

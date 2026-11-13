@@ -12,7 +12,7 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://keycage.kutluhaneth.com"),
   title: "KeyCage. I fence agent spending on NEAR",
   description:
-    "I fence what an agent can spend on NEAR. I lock receivers, methods, a transaction cap, a daily budget, and a gas allowance. I can replay every allow and every deny.",
+    "I fence what an agent can spend on NEAR. I lock receivers, methods, a transaction cap, a daily budget, and a gas allowance. I can replay every allow and every block.",
   icons: {
     icon: [
       { url: "/icon.svg", type: "image/svg+xml" },
@@ -27,7 +27,7 @@ export const metadata: Metadata = {
       "I fence what an agent can spend on NEAR. I lock receivers, methods, a transaction cap, a daily budget, and a gas allowance.",
     url: "https://keycage.kutluhaneth.com",
     siteName: "KeyCage",
-    images: [{ url: "/og.png", width: 1200, height: 630, alt: "KeyCage logo" }],
+    images: [{ url: "/og.png", width: 1200, height: 630, alt: "KeyCage. I fence agent spending on NEAR" }],
     type: "website",
   },
   twitter: {

@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import Link from "next/link";
-import { Logo } from "@/components/Logo";
+import { SiteFooter, SiteHeader } from "@/components/SiteChrome";
 import { useI18n } from "@/lib/i18n";
 
 export default function NotFound() {
@@ -13,13 +13,16 @@ export default function NotFound() {
   }, [t.missingTitle]);
 
   return (
-    <main className="shell missing">
-      <Logo className="brand-logo" title="KeyCage" />
-      <h1>{t.missingTitle}</h1>
-      <p className="section-copy">{t.missingBody}</p>
-      <Link className="btn btn-primary" href="/">
-        {t.homeLink}
-      </Link>
+    <main className="shell">
+      <SiteHeader />
+      <div className="missing">
+        <h1>{t.missingTitle}</h1>
+        <p className="section-copy">{t.missingBody}</p>
+        <Link className="btn btn-primary" href="/">
+          {t.backHome}
+        </Link>
+      </div>
+      <SiteFooter />
     </main>
   );
 }

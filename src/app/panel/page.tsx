@@ -4,7 +4,7 @@ import { PanelPage } from "@/components/PanelPage";
 export const metadata: Metadata = {
   title: "KeyCage panel",
   description:
-    "I run the attack suite, lock the fence, and read every allow and every block.",
+    "I run the simulated attack suite, lock the fence, and read a public NEAR account.",
   alternates: {
     canonical: "https://keycage.kutluhaneth.com/panel",
   },
