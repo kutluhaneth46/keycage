@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" fill="none">
+  <rect width="1200" height="630" fill="#07080d"/>
+  <circle cx="980" cy="80" r="260" fill="#8B6CFF" opacity="0.35"/>
+  <circle cx="160" cy="560" r="220" fill="#00EC97" opacity="0.18"/>
+  <g transform="translate(96 175) scale(4.4)">
+    <path d="M14 22V14H22M42 14H50V22M50 42V50H42M22 50H14V42" stroke="#8B6CFF" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M24 20V44M32 20V44M40 20V44" stroke="#00EC97" stroke-width="2.2" stroke-linecap="round"/>
+    <rect x="15" y="24" width="16" height="16" rx="2.5" stroke="#F4FFF9" stroke-width="2.3"/>
+    <path d="M15 32H31M23 24V40" stroke="#00EC97" stroke-width="2.1"/>
+    <path d="M31 32H50" stroke="#F4FFF9" stroke-width="3" stroke-linecap="round"/>
+    <path d="M43 32V39M49 32V37" stroke="#8B6CFF" stroke-width="3" stroke-linecap="round"/>
+  </g>
+  <text x="430" y="270" fill="#F4FFF9" font-family="Arial, sans-serif" font-size="92" font-weight="700">KeyCage</text>
+  <text x="430" y="360" fill="#00EC97" font-family="Arial, sans-serif" font-size="36">I fence agent spending</text>
+  <text x="430" y="414" fill="#D7FFF0" font-family="Arial, sans-serif" font-size="36">on NEAR</text>
+</svg>
