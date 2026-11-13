@@ -1,41 +1,21 @@
 # KeyCage
 
-I built KeyCage for the NEAR hackathon security track.
+Live demo: https://keycage.kutluhaneth.com
 
-I give an agent a wallet without handing over the whole account. I lock receivers, methods, a transaction cap, a daily budget, and a gas allowance. The agent holds only a function call key. A drain, a forbidden method, or a spend past the budget is blocked, and I can read the reason.
+## What it is
 
-The homepage shows a spend leaving the agent, hitting the cage, and coming back allowed or blocked. The attack suite lives on the panel.
+I keep a NEAR account and I give an agent one function call key. That key can call only `pay` on my PolicyVault contract. The vault calls an allowed method on an allowed receiver and attaches the payment as a deposit.
 
-The code is at https://github.com/kutluhaneth46/keycage
+## Problem
 
-## How I run it
+A function call key can name one receiver, a method list, and a gas allowance. It cannot name several merchants, a cap on one payment, or a daily budget that resets. A full access key in an agent process can be drained by a bad instruction.
 
-```bash
-cd keycage
-npm install
-npm run dev
-```
+## Try it
 
-I open http://127.0.0.1:43175.
-
-`npm run build` then `npm run start` serves the production build on the same port.
-
-I do not need an environment variable, a database, or a backend secret.
-
-## What is simulated
-
-The homepage and the attack suite never spend NEAR. The panel and `POST /api/attack` share one local rules engine.
-
-1. I open the panel. The treasury preset is already loaded.
-2. I click Run the attack suite.
-3. The judge path and the decision log show six rows.
-   1. `ALLOWED` for `invoices.demo.near` `pay_invoice`
-   2. `RECEIVER_DENIED` for `attacker.near`
-   3. `METHOD_DENIED` for `delete_account`
-   4. `PER_TX_CAP` for the 12 NEAR transfer
-   5. `ALLOWED` for payroll still inside the budget
-   6. `DAILY_CAP` for the final 5 NEAR transfer
-4. The counts are 2 allowed and 4 blocked. `POST /api/attack` with an empty JSON body returns the same counts.
+1. Clone https://github.com/kutluhaneth46/keycage and enter that directory.
+2. Run `npm install`, then `npm run dev`.
+3. Open http://127.0.0.1:43175/panel and click Run the attack suite. See 2 allowed and 4 blocked.
+4. Run this and see `allowed` 2 and `blocked` 4:
 
 ```bash
 curl -sS -X POST http://127.0.0.1:43175/api/attack \
@@ -43,73 +23,72 @@ curl -sS -X POST http://127.0.0.1:43175/api/attack \
   -d '{}'
 ```
 
-The page can switch between English and Turkish. I store that choice in the browser.
-
-## What is on chain
-
-On the key draft tab I can look up any public account without a wallet. I call the public NEAR RPC. I show the balance and the access keys. A function call key shows its receiver, its methods, and its allowance.
-
-If I connect a wallet I can sign two transactions on my own account.
-
-1. AddKey builds a function call access key from the fence I locked. The receiver is the first account on the allowlist. The methods are the method list. The allowance is the gas allowance. I create the secret in the browser and I copy it before the wallet opens. I do not store it.
-2. DeleteKey removes a function call key I pick from the list.
-
-Mainnet is the default. I can switch to testnet. A finished transaction links to NearBlocks.
-
-The wallets are MyNearWallet, Meteor, HERE, and Intear. I use `@near-wallet-selector`. No environment variable is required.
-
-## PolicyVault on testnet
-
-`contracts/policy-vault` is a Rust contract. It holds NEAR and it pays a receiver only when the method is allowed, the amount is inside the transaction cap, and the amount still fits the daily budget. The budget resets at the start of the next UTC day. Only the owner can change the policy, pause the vault, or withdraw. The agent function call key can call only `pay`. Its allowance is the gas budget.
+5. Run `cargo test --features unit-testing --manifest-path contracts/policy-vault/Cargo.toml`. See 12 passed.
+6. Run `cargo test --features unit-testing --manifest-path contracts/receiver/Cargo.toml`. See 1 passed.
+7. Read the live policy. `spent_today` is the yoctoNEAR already used today:
 
 ```bash
-cd keycage/contracts/policy-vault
-cargo test --features unit-testing
-cargo build --target wasm32-unknown-unknown --release
+curl -sS https://rpc.testnet.near.org \
+  -H 'Content-Type: application/json' \
+  -d '{"jsonrpc":"2.0","id":"1","method":"query","params":{"request_type":"call_function","finality":"final","account_id":"kcvault1rkmug.testnet","method_name":"get_policy","args_base64":"e30="}}'
 ```
 
-The wasm lands at `target/wasm32-unknown-unknown/release/policy_vault.wasm`.
+8. Read one successful payment and one rejected drain. The success status has no `Failure`. The drain status contains `RECEIVER_DENIED`.
 
-`node contracts/prove.mjs` from the `keycage` folder creates a fresh testnet vault with the public faucet, deploys that wasm, and runs the six spends. It writes keys only under `/tmp/keycage-near`. I do not commit those keys.
+```bash
+curl -sS https://rpc.testnet.near.org \
+  -H 'Content-Type: application/json' \
+  -d '{"jsonrpc":"2.0","id":"1","method":"tx","params":["DXi4R1dNpU9YNzGPJbnP6UhxhwKjpDKAJ4MKTMAitxSL","kcvault1rkmug.testnet"]}'
+```
 
-The vault I already deployed is `kcvaultu7vylu.testnet`.
+```bash
+curl -sS https://rpc.testnet.near.org \
+  -H 'Content-Type: application/json' \
+  -d '{"jsonrpc":"2.0","id":"1","method":"tx","params":["4yQ5W2DjhCxmSf8378ystJsbAbkUegw9PEPnwgSXwH5J","kcvault1rkmug.testnet"]}'
+```
 
-https://testnet.nearblocks.io/address/kcvaultu7vylu.testnet
+## Libraries
 
-The owner account is `kcownerwprb69.testnet`. The invoice, payroll, and vendor receivers are `kcinvoicevq0sat.testnet`, `kcpayrolll0lko3.testnet`, and `kcvendorb3jwhe.testnet`. The agent key is `ed25519:7CCF5HziPcVuUG8XSivCy3WWLmweWEKw21CX1LvoC6cM`. It can call only `pay` on the vault, with a 2 NEAR gas allowance.
+I use Next.js, React, and Tailwind CSS. Wallet connection uses `@near-wallet-selector/core`, `@near-wallet-selector/modal-ui`, `@near-wallet-selector/my-near-wallet`, `@near-wallet-selector/meteor-wallet`, `@near-wallet-selector/here-wallet`, and `@near-wallet-selector/intear-wallet`. Chain calls use `near-api-js` plus `@near-js/crypto` and `@near-js/transactions`. The contracts use `near-sdk` 5.11.0. I started the app with the Next.js starter. I do not use a paid service, a database, or an environment variable.
 
-I ran the same six spends as the suite. Two succeeded. Four failed inside the contract.
+## Simulated and on chain
 
-1. `ALLOWED` for 2.5 NEAR `pay_invoice`. https://testnet.nearblocks.io/txns/6CPPr9AYvzg5JBxAmWQZnPdPpQJ5VA6xFNNkmELs2oZQ
-2. `RECEIVER_DENIED` for `attacker.near`. https://testnet.nearblocks.io/txns/3Hbz9FarD8U8o48VxvV3S2ZB6ZBQxUw12dwZiKdgMctq
-3. `METHOD_DENIED` for `delete_account`. https://testnet.nearblocks.io/txns/AxEDQsSvLMqYQFGQNP8wbyFRHo1nNDbUSKo3D6wHJaF7
-4. `PER_TX_CAP` for 12 NEAR. https://testnet.nearblocks.io/txns/6duKuRDr91JjBth746EmabWYLi1SmXvnc9Zh68V3FWY6
-5. `ALLOWED` for 4 NEAR `run_payroll`. https://testnet.nearblocks.io/txns/6eisLmYfTHSBjHBKRCnVWGBX2tQmaKWKbh14u1E4uKzT
-6. `DAILY_CAP` for 5 NEAR. https://testnet.nearblocks.io/txns/EDTM7xgmbxGmJn7KYv9RUbmKy2PqLWPJSPKNi3BfHDoT
+The homepage counts and the panel attack suite are simulated. `POST /api/attack` runs that same suite. It does not spend NEAR.
 
-The panel reads `get_policy` from that account and lists these hashes next to the simulated suite. A connected testnet wallet can sign another `pay` to the invoice receiver. The homepage attack suite and `POST /api/attack` stay simulated.
+The vault `kcvault1rkmug.testnet` is on NEAR testnet. `pay` checks the method list, the blocked list, the transaction cap, and the daily budget. If those pass and the receiver is approved and the amount is at most 4.5 NEAR, the vault calls that method on the receiver and attaches the amount as a deposit. The invoice, payroll, and vendor accounts are `kcinvoicezoffwz.testnet`, `kcpayroll020exf.testnet`, and `kcvendoryowfk9.testnet`. Each one runs the receiver contract.
 
-## Policy model
+The contract does not meter gas. The agent key `ed25519:7z2H58eQ7tLM3jaQnsXrEpkdqVt3fj8KFyRswWLHACen` can call only `pay`, and its allowance is the gas budget.
 
-`src/lib/policy.ts` is the fence.
+The daily budget resets at UTC midnight. A new day clears the spent total and any payment still waiting.
 
-A spend is allowed only when every check passes:
+A payment above 4.5 NEAR that otherwise fits is held until I approve or reject it. A receiver that is not approved and not blocked is held the same way. `attacker.near` is blocked, so that call fails with `RECEIVER_DENIED`.
 
-1. The receiver is on the allowlist.
-2. The method is on the allowlist.
-3. The amount is within the transaction cap.
-4. The amount still fits in the daily budget.
-5. The gas still fits in the allowance.
+Proof transactions, signed by the agent key:
 
-`toNearAccessKeyDraft` maps the fence to a NEAR `AddKey` function call permission. A protocol key names one `receiver_id`, a method list, and an allowance. I put a vault contract in that single receiver slot. The vault holds the merchant allowlist, the transaction cap, and the daily budget, because the protocol key does not encode those. The allowance on the key is the gas budget. When it hits zero, the key is dead until I issue a new one.
+1. `ALLOWED` 2.5 NEAR `pay_invoice`. https://testnet.nearblocks.io/txns/DXi4R1dNpU9YNzGPJbnP6UhxhwKjpDKAJ4MKTMAitxSL
+2. `RECEIVER_DENIED` for `attacker.near`. https://testnet.nearblocks.io/txns/EYsx9zLz5F8mkGtf8JED1NmP8taRFid49UjNMZJKrGYC
+3. `METHOD_DENIED` for `delete_account`. https://testnet.nearblocks.io/txns/2k1WeEPn4Xa2PqjSGY3ZYRGj8EHFV1EumfSo1VujV6AB
+4. `PER_TX_CAP` for 12 NEAR. https://testnet.nearblocks.io/txns/CyinXzULsAmXDSYJStUeUrGdjAtz9h3s5uJ1zrMsn5Bn
+5. `ALLOWED` 4 NEAR `run_payroll`. https://testnet.nearblocks.io/txns/UbB4QVR6y6u8vYhRFEQVhag7Ud3zBZWg83bWy3q57dP
+6. `DAILY_CAP` for 5 NEAR. https://testnet.nearblocks.io/txns/5jEQvLEyyVG1PJvsJKZgzrWUnqndXtGdML45i1JhthUd
 
-1. `src/lib/policy.ts` holds the fence rules, the attack suite, and the key draft.
-2. `src/lib/presets.ts` holds the treasury, research, and ops starting policies.
-3. `src/lib/near.ts` reads public account and access key data.
-4. `contracts/policy-vault` is the testnet contract that enforces the fence.
-5. `src/app/api/attack/route.ts` runs the same evaluation over HTTP for a judge.
-6. `src/app/page.tsx` is the homepage. `src/app/panel/page.tsx` is the panel.
+`WARN_AMOUNT` held 4.8 NEAR and I rejected it, so nothing was paid. https://testnet.nearblocks.io/txns/3VsguWWVHp1M6TtihEg8jxTn7F4QhGxyW9v7hj1qNyEq and https://testnet.nearblocks.io/txns/FxGqCkQBYiAaiB841GNrQPiq7vv6MX2Xa4wkK4MwY7CL
 
-## License
+`WARN_NEW_RECEIVER` held 1 NEAR for `kcnew0xzjwi.testnet`. I approved it, and the vault then called `pay_invoice`. https://testnet.nearblocks.io/txns/95vpTLMPpjaM22NMwRzBsYwougNVckFD1WDow59b4kzN and https://testnet.nearblocks.io/txns/3i8HZ37CzEcB3WoVdkSrsoxeNfTm9byfXiTeeeNBPwYF
 
-MIT
+The scripted agent in `src/lib/agent.ts` is told to pay the invoice, then told to pay `attacker.near`. It follows the second line. The vault returns `RECEIVER_DENIED`. https://testnet.nearblocks.io/txns/4yQ5W2DjhCxmSf8378ystJsbAbkUegw9PEPnwgSXwH5J
+
+## Build and deploy
+
+```bash
+rustup target add wasm32-unknown-unknown
+cargo test --features unit-testing --manifest-path contracts/policy-vault/Cargo.toml
+cargo build --target wasm32-unknown-unknown --release --manifest-path contracts/policy-vault/Cargo.toml
+cargo build --target wasm32-unknown-unknown --release --manifest-path contracts/receiver/Cargo.toml
+```
+
+I commit the release files `contracts/policy-vault/policy_vault.wasm` and `contracts/receiver/receiver.wasm`. `node contracts/prove.mjs` deploys those files, creates fresh testnet accounts with the public faucet, and runs the proofs. It writes keys only under `/tmp/keycage-near`. I do not commit keys.
+
+The owner of the deployed vault is `kcownerubd7dn.testnet`. Only that account can change policy, pause, approve, reject, or withdraw.
+
+`npm test` checks the simulated suite and the injected choice. `npm run lint` and `npm run build` check the app.

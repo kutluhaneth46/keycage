@@ -2,13 +2,17 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { StorageService, WalletSelector } from "@near-wallet-selector/core";
+import { agentInjection, agentTask } from "@/lib/agent";
 import { useI18n } from "@/lib/i18n";
 import { accountUrl, callView, formatYocto, nearToYocto, txUrl, viewKeyAllowance } from "@/lib/near";
 import {
   VAULT_ACCOUNT,
   VAULT_AGENT_KEY,
+  VAULT_INJECTION,
   VAULT_INVOICE,
   VAULT_PROOFS,
+  VAULT_REVIEW,
+  VAULT_WARN,
 } from "@/lib/vaultProof";
 
 type PolicyView = {
@@ -187,6 +191,7 @@ export function VaultProof() {
               {t.liveGas} {gasLeft ?? formatYocto(policy.gas_allowance)} NEAR
             </span>
           </p>
+          <p className="section-copy">{t.gasNote}</p>
           <p className="key-meta">
             <span>{t.liveReceivers}</span>
             <span className="mono">{policy.allow_receivers.join(", ")}</span>
@@ -219,6 +224,59 @@ export function VaultProof() {
           </li>
         ))}
       </ul>
+
+      <h3 className="vault-sub">{t.warnTitle}</h3>
+      <p className="section-copy">{t.warnCopy}</p>
+      <ul className="key-list proof-list">
+        <li className="key-row">
+          <strong>{VAULT_WARN.code}</strong>
+          <p className="key-meta">
+            <span>
+              {VAULT_WARN.amount} NEAR {VAULT_WARN.method}
+            </span>
+            <span className="mono">{VAULT_WARN.receiver}</span>
+          </p>
+          <p className="key-meta">
+            <a href={txUrl("testnet", VAULT_WARN.hash)} target="_blank" rel="noreferrer">
+              {t.viewTx}
+            </a>
+            <a href={txUrl("testnet", VAULT_WARN.rejectHash)} target="_blank" rel="noreferrer">
+              {t.rejectTx}
+            </a>
+          </p>
+        </li>
+        <li className="key-row">
+          <strong>{VAULT_REVIEW.code}</strong>
+          <p className="key-meta">
+            <span>
+              {VAULT_REVIEW.amount} NEAR {VAULT_REVIEW.method}
+            </span>
+            <span className="mono">{VAULT_REVIEW.receiver}</span>
+          </p>
+          <p className="key-meta">
+            <a href={txUrl("testnet", VAULT_REVIEW.hash)} target="_blank" rel="noreferrer">
+              {t.viewTx}
+            </a>
+            <a href={txUrl("testnet", VAULT_REVIEW.approveHash)} target="_blank" rel="noreferrer">
+              {t.approveTx}
+            </a>
+          </p>
+        </li>
+      </ul>
+
+      <h3 className="vault-sub">{t.injectTitle}</h3>
+      <p className="section-copy">{t.injectCopy}</p>
+      <p className="section-copy">{agentTask}</p>
+      <p className="section-copy">{agentInjection}</p>
+      <p className="key-meta">
+        <span>
+          {VAULT_INJECTION.amount} NEAR {VAULT_INJECTION.method}
+        </span>
+        <span className="mono">{VAULT_INJECTION.receiver}</span>
+        <a href={txUrl("testnet", VAULT_INJECTION.hash)} target="_blank" rel="noreferrer">
+          {VAULT_INJECTION.code}
+        </a>
+      </p>
 
       <h3 className="vault-sub">{t.testPayTitle}</h3>
       <p className="section-copy">{t.testPayCopy}</p>

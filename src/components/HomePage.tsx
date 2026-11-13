@@ -6,6 +6,8 @@ import { DotField } from "@/components/DotField";
 import { HeroCage } from "@/components/HeroCage";
 import { FaqList, SiteFooter, SiteHeader, usePageTitle } from "@/components/SiteChrome";
 import { useI18n } from "@/lib/i18n";
+import { accountUrl, txUrl } from "@/lib/near";
+import { VAULT_ACCOUNT, VAULT_INJECTION, VAULT_PROOFS } from "@/lib/vaultProof";
 
 export function HomePage() {
   const { t } = useI18n();
@@ -50,6 +52,22 @@ export function HomePage() {
               <span>{t.blocked}</span>
             </p>
           </div>
+          <aside className="home-proof" aria-label={t.homeChain}>
+            <p className="kicker">{t.homeChain}</p>
+            <p>{t.homeChainCopy}</p>
+            <p className="home-proof-links">
+              <a href={accountUrl("testnet", VAULT_ACCOUNT)} target="_blank" rel="noreferrer">
+                {VAULT_ACCOUNT}
+              </a>
+              <a href={txUrl("testnet", VAULT_PROOFS[0].hash)} target="_blank" rel="noreferrer">
+                {VAULT_PROOFS[0].code}
+              </a>
+              <a href={txUrl("testnet", VAULT_INJECTION.hash)} target="_blank" rel="noreferrer">
+                {VAULT_INJECTION.code}
+              </a>
+              <Link href="/panel#vault">{t.openProof}</Link>
+            </p>
+          </aside>
         </div>
         <div className="hero-visual">
           <HeroCage

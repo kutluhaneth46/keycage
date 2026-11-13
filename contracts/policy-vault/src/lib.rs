@@ -1,8 +1,9 @@
-use near_sdk::store::IterableSet;
-use near_sdk::{env, near, require, AccountId, Gas, NearToken, PanicOnDefault, Promise};
+use near_sdk::store::{IterableMap, IterableSet};
+use near_sdk::{env, near, require, AccountId, Gas, NearToken, PanicOnDefault, Promise, PromiseOrValue};
 
 const DAY_MS: u64 = 86_400_000;
-const CALLBACK_GAS: Gas = Gas::from_tgas(8);
+const CALLBACK_GAS: Gas = Gas::from_tgas(10);
+const CALL_GAS: Gas = Gas::from_tgas(25);
 
 /// I hold spendable NEAR and I refuse a payout that breaks the fence.
 #[near(contract_state)]
@@ -16,8 +17,22 @@ pub struct PolicyVault {
     gas_allowance: NearToken,
     spent_today: NearToken,
     window_start_ms: u64,
+    warn_above: NearToken,
+    next_id: u64,
     allow_receivers: IterableSet<AccountId>,
+    blocked_receivers: IterableSet<AccountId>,
     allow_methods: IterableSet<String>,
+    pending: IterableMap<u64, Pending>,
+}
+
+#[near(serializers = [borsh, json])]
+#[derive(Clone)]
+pub struct Pending {
+    pub id: u64,
+    pub receiver: AccountId,
+    pub method: String,
+    pub amount: NearToken,
+    pub code: String,
 }
 
 #[near(serializers = [json])]
@@ -30,8 +45,11 @@ pub struct PolicyView {
     pub gas_allowance: NearToken,
     pub spent_today: NearToken,
     pub window_start_ms: u64,
+    pub warn_above: NearToken,
     pub allow_receivers: Vec<AccountId>,
+    pub blocked_receivers: Vec<AccountId>,
     pub allow_methods: Vec<String>,
+    pub pending: Vec<Pending>,
 }
 
 #[near(serializers = [json])]
@@ -55,7 +73,9 @@ impl PolicyVault {
         per_tx_max: NearToken,
         daily_budget: NearToken,
         gas_allowance: NearToken,
+        warn_above: NearToken,
         receivers: Vec<AccountId>,
+        blocked: Vec<AccountId>,
         methods: Vec<String>,
     ) -> Self {
         let mut vault = Self {
@@ -66,10 +86,17 @@ impl PolicyVault {
             gas_allowance,
             spent_today: NearToken::from_yoctonear(0),
             window_start_ms: start_of_utc_day(env::block_timestamp_ms()),
+            warn_above,
+            next_id: 1,
             allow_receivers: IterableSet::new(b"r"),
+            blocked_receivers: IterableSet::new(b"b"),
             allow_methods: IterableSet::new(b"m"),
+            pending: IterableMap::new(b"p"),
         };
         vault.replace_lists(receivers, methods);
+        for account in blocked {
+            vault.blocked_receivers.insert(account);
+        }
         vault
     }
 
@@ -83,8 +110,11 @@ impl PolicyVault {
             gas_allowance: self.gas_allowance,
             spent_today,
             window_start_ms,
+            warn_above: self.warn_above,
             allow_receivers: self.allow_receivers.iter().cloned().collect(),
+            blocked_receivers: self.blocked_receivers.iter().cloned().collect(),
             allow_methods: self.allow_methods.iter().cloned().collect(),
+            pending: self.pending.iter().map(|(_, item)| item.clone()).collect(),
         }
     }
 
@@ -129,25 +159,44 @@ impl PolicyVault {
         Promise::new(self.owner.clone()).transfer(amount)
     }
 
-    /// I pay `receiver` from the vault when the fence allows this method and this amount.
-    /// The agent key may call only this method. Its allowance is the gas budget.
-    pub fn pay(&mut self, receiver: AccountId, method: String, amount: NearToken) -> Promise {
+    /// I call `method` on `receiver` and attach `amount` when the fence allows it.
+    /// A large spend, or a receiver I have not approved, waits for me.
+    /// Gas is not metered here. The agent function call key allowance meters gas.
+    pub fn pay(&mut self, receiver: AccountId, method: String, amount: NearToken) -> PromiseOrValue<u64> {
         require!(!self.paused, "PAUSED");
         require!(amount > NearToken::from_yoctonear(0), "AMOUNT_EMPTY");
         self.roll_window();
         let method = method.trim().to_ascii_lowercase();
-        require!(self.allow_receivers.contains(&receiver), "RECEIVER_DENIED");
         require!(self.allow_methods.contains(&method), "METHOD_DENIED");
+        require!(!self.blocked_receivers.contains(&receiver), "RECEIVER_DENIED");
         require!(amount <= self.per_tx_max, "PER_TX_CAP");
         let left = self.daily_budget.saturating_sub(self.spent_today);
         require!(amount <= left, "DAILY_CAP");
         require!(amount <= liquid_balance(), "INSUFFICIENT_BALANCE");
+        if !self.allow_receivers.contains(&receiver) {
+            return PromiseOrValue::Value(self.hold(receiver, method, amount, "WARN_NEW_RECEIVER"));
+        }
+        if amount > self.warn_above {
+            return PromiseOrValue::Value(self.hold(receiver, method, amount, "WARN_AMOUNT"));
+        }
         self.spent_today = self.spent_today.saturating_add(amount);
-        Promise::new(receiver).transfer(amount).then(
-            Self::ext(env::current_account_id())
-                .with_static_gas(CALLBACK_GAS)
-                .on_transfer(amount),
-        )
+        PromiseOrValue::Promise(self.forward(receiver, method, amount))
+    }
+
+    pub fn approve(&mut self, id: u64) -> Promise {
+        self.assert_owner();
+        let Some(item) = self.pending.remove(&id) else {
+            env::panic_str("PENDING_MISSING");
+        };
+        self.forward(item.receiver, item.method, item.amount)
+    }
+
+    pub fn reject(&mut self, id: u64) {
+        self.assert_owner();
+        let Some(item) = self.pending.remove(&id) else {
+            env::panic_str("PENDING_MISSING");
+        };
+        self.spent_today = self.spent_today.saturating_sub(item.amount);
     }
 
     #[private]
@@ -188,8 +237,39 @@ impl PolicyVault {
 
     fn roll_window(&mut self) {
         let (spent, start) = self.preview_window();
+        let rolled = start > self.window_start_ms;
         self.spent_today = spent;
         self.window_start_ms = start;
+        if rolled {
+            self.pending.clear();
+        }
+    }
+
+    fn hold(&mut self, receiver: AccountId, method: String, amount: NearToken, code: &str) -> u64 {
+        let id = self.next_id;
+        self.next_id += 1;
+        self.spent_today = self.spent_today.saturating_add(amount);
+        self.pending.insert(
+            id,
+            Pending {
+                id,
+                receiver,
+                method,
+                amount,
+                code: code.to_string(),
+            },
+        );
+        id
+    }
+
+    fn forward(&mut self, receiver: AccountId, method: String, amount: NearToken) -> Promise {
+        Promise::new(receiver)
+            .function_call(method, b"{}".to_vec(), amount, CALL_GAS)
+            .then(
+                Self::ext(env::current_account_id())
+                    .with_static_gas(CALLBACK_GAS)
+                    .on_transfer(amount),
+            )
     }
 }
 
@@ -236,11 +316,13 @@ mod tests {
             yocto(5),
             yocto(10),
             yocto(2),
+            yocto(4),
             vec![
                 "invoices.demo.near".parse().unwrap(),
                 "payroll.demo.near".parse().unwrap(),
                 "vendor.acme.near".parse().unwrap(),
             ],
+            vec!["attacker.near".parse().unwrap()],
             vec![
                 "pay_invoice".to_string(),
                 "run_payroll".to_string(),
@@ -325,5 +407,39 @@ mod tests {
         ctx("agent.testnet", 20, 1_700_000_000_000);
         let mut vault = vault();
         vault.withdraw(yocto(1));
+    }
+
+    #[test]
+    fn holds_a_large_spend_for_approval() {
+        ctx("agent.testnet", 30, 1_700_000_000_000);
+        let mut vault = vault();
+        vault.pay("invoices.demo.near".parse().unwrap(), "pay_invoice".into(), yocto(5));
+        assert_eq!(vault.get_policy().pending.len(), 1);
+        assert_eq!(vault.get_policy().pending[0].code, "WARN_AMOUNT");
+        ctx("owner.testnet", 30, 1_700_000_000_000);
+        vault.approve(1);
+        assert!(vault.get_policy().pending.is_empty());
+    }
+
+    #[test]
+    fn holds_a_new_receiver_and_reject_releases_the_budget() {
+        ctx("agent.testnet", 30, 1_700_000_000_000);
+        let mut vault = vault();
+        vault.pay("fresh.near".parse().unwrap(), "pay_invoice".into(), yocto(1));
+        assert_eq!(vault.get_policy().pending[0].code, "WARN_NEW_RECEIVER");
+        assert_eq!(vault.get_status().spent_today, yocto(1));
+        ctx("owner.testnet", 30, 1_700_000_000_000);
+        vault.reject(1);
+        assert_eq!(vault.get_status().spent_today, NearToken::from_yoctonear(0));
+        assert!(vault.get_policy().pending.is_empty());
+    }
+
+    #[test]
+    #[should_panic(expected = "OWNER_ONLY")]
+    fn blocks_a_stranger_from_approval() {
+        ctx("agent.testnet", 30, 1_700_000_000_000);
+        let mut vault = vault();
+        vault.pay("invoices.demo.near".parse().unwrap(), "pay_invoice".into(), yocto(5));
+        vault.approve(1);
     }
 }

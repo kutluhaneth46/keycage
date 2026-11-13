@@ -6,7 +6,8 @@
     "dev": "next dev --hostname 127.0.0.1 --port 43175",
     "build": "next build",
     "start": "next start --hostname 127.0.0.1 --port 43175",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test": "node --experimental-strip-types --test src/lib/policy.test.ts"
   },
   "dependencies": {
     "@near-wallet-selector/core": "^10.1.4",
