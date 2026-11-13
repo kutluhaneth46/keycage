@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useState, useTransition } from "react";
+import { DotField } from "@/components/DotField";
 import { HeroCage } from "@/components/HeroCage";
 import { Logo } from "@/components/Logo";
+import { ScrambleBadge } from "@/components/ScrambleBadge";
 import {
   displayLabel,
   displayReason,
@@ -314,54 +316,50 @@ export default function Home() {
       </header>
 
       <section className="hero">
-        <div className="hero-grid">
-          <div className="hero-side">
-            <div className="hero-lead">
-              <p className="eyebrow">{t.eyebrow}</p>
-              <h1>{t.hero}</h1>
-              <p className="lede">{t.lede}</p>
-              <p className="local-note">{t.localNote}</p>
+        <DotField />
+        <div className="hero-type">
+          <ScrambleBadge text={t.eyebrow} />
+          <h1>{t.hero}</h1>
+          <p className="lede">{t.lede}</p>
+          <p className="local-note">{t.localNote}</p>
+          <div className="hero-actions">
+            <div className="hero-pair">
+              <button
+                className="btn btn-primary"
+                onClick={runLocalSuite}
+                disabled={pending || serverBusy}
+                type="button"
+              >
+                {pending ? t.running : t.runSuite}
+              </button>
+              <button
+                className="btn btn-ghost"
+                onClick={runServerSuite}
+                disabled={serverBusy || pending}
+                type="button"
+                aria-busy={serverBusy}
+                aria-describedby="server-hint"
+              >
+                {serverBusy ? t.running : t.runServer}
+              </button>
             </div>
-            <ul className="chips" aria-label={t.chipsLabel}>
-              <li>{t.chipReceivers}</li>
-              <li>{t.chipMethods}</li>
-              <li>{t.chipTx}</li>
-              <li>{t.chipDaily}</li>
-              <li>{t.chipGas}</li>
-            </ul>
-            <div className="hero-actions">
-              <div className="hero-actions-grid">
-                <button
-                  className="btn btn-primary"
-                  onClick={runLocalSuite}
-                  disabled={pending || serverBusy}
-                  type="button"
-                >
-                  {pending ? t.running : t.runSuite}
-                </button>
-                <button
-                  className="btn btn-ghost"
-                  onClick={runServerSuite}
-                  disabled={serverBusy || pending}
-                  type="button"
-                  aria-busy={serverBusy}
-                  aria-describedby="server-hint"
-                >
-                  {serverBusy ? t.running : t.runServer}
-                </button>
-                <a className="btn btn-ghost" href="#desk">
-                  {t.openDesk}
-                </a>
-                <a className="btn btn-ghost" href="#judge">
-                  {t.judgeLink}
-                </a>
-              </div>
-              <p id="server-hint" className="btn-hint mono">
-                {t.runServerHint}
-              </p>
+            <p id="server-hint" className="btn-hint mono">
+              {t.runServerHint}
+            </p>
+            <div className="hero-links">
+              <a href="#desk">{t.openDesk}</a>
+              <a href="#judge">{t.judgeLink}</a>
             </div>
           </div>
-          <div className="hero-visual">
+          <ul className="chips" aria-label={t.chipsLabel}>
+            <li>{t.chipReceivers}</li>
+            <li>{t.chipMethods}</li>
+            <li>{t.chipTx}</li>
+            <li>{t.chipDaily}</li>
+            <li>{t.chipGas}</li>
+          </ul>
+        </div>
+        <div className="hero-visual">
             <HeroCage
               agent={t.visualAgent}
               cage={t.visualCage}
@@ -399,7 +397,9 @@ export default function Home() {
               )}
             </div>
           </div>
-        </div>
+      </section>
+
+      <section className="section">
         <ol className="steps">
           <li className="step">
             <span className="step-index">01</span>

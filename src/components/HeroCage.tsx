@@ -33,8 +33,8 @@ export function HeroCage({
         <div className="slot slot-agent">
           <div className="node node-agent">
             <svg viewBox="0 0 48 48" className="node-icon">
-              <circle cx="24" cy="16" r="7" fill="#00EC97" />
-              <path d="M10 40c2.2-8 7.4-12 14-12s11.8 4 14 12" fill="#C4B5FD" />
+              <circle cx="24" cy="16" r="7" fill="currentColor" />
+              <path d="M10 40c2.2-8 7.4-12 14-12s11.8 4 14 12" fill="currentColor" opacity="0.55" />
             </svg>
           </div>
         </div>
