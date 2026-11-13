@@ -142,6 +142,43 @@ function parsePermission(permission: KeyList["keys"][number]["access_key"]["perm
   };
 }
 
+export async function callView<T>(
+  net: NearNet,
+  accountId: string,
+  methodName: string,
+  args: Record<string, unknown> = {},
+): Promise<T> {
+  const encoded = new TextEncoder().encode(JSON.stringify(args));
+  let binary = "";
+  for (const byte of encoded) binary += String.fromCharCode(byte);
+  const payload = await rpc<{ result: number[] }>(net, {
+    request_type: "call_function",
+    finality: "final",
+    account_id: accountId,
+    method_name: methodName,
+    args_base64: btoa(binary),
+  });
+  const text = new TextDecoder().decode(Uint8Array.from(payload.result ?? []));
+  return JSON.parse(text) as T;
+}
+
+export async function viewKeyAllowance(net: NearNet, accountId: string, publicKey: string): Promise<string | null> {
+  const payload = await rpc<{
+    permission?:
+      | "FullAccess"
+      | { FunctionCall?: { allowance?: string | null } };
+  }>(net, {
+    request_type: "view_access_key",
+    finality: "final",
+    account_id: accountId,
+    public_key: publicKey,
+  });
+  const permission = payload.permission;
+  if (!permission || permission === "FullAccess") return null;
+  const allowance = permission.FunctionCall?.allowance;
+  return allowance == null ? null : formatYocto(String(allowance));
+}
+
 async function rpc<T>(net: NearNet, params: Record<string, unknown>): Promise<T> {
   let failed = false;
   for (const url of RPC[net]) {

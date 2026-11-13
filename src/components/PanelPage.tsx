@@ -3,6 +3,7 @@
 import { useMemo, useState, useTransition } from "react";
 import Link from "next/link";
 import { ChainKeys } from "@/components/ChainKeys";
+import { VaultProof } from "@/components/VaultProof";
 import { CountUp } from "@/components/CountUp";
 import { SiteFooter, SiteHeader, usePageTitle } from "@/components/SiteChrome";
 import {
@@ -268,6 +269,7 @@ export function PanelPage() {
         </nav>
         <div className="panel-main">
           {tab === "attack" ? (
+            <div className="stack">
             <article className="card">
               <div className="title-row">
                 <p className="kicker">{t.panelTitle}</p>
@@ -344,6 +346,8 @@ export function PanelPage() {
                 </div>
               )}
             </article>
+            <VaultProof />
+            </div>
           ) : null}
 
           {tab === "fence" ? (

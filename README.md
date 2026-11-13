@@ -58,6 +58,37 @@ Mainnet is the default. I can switch to testnet. A finished transaction links to
 
 The wallets are MyNearWallet, Meteor, HERE, and Intear. I use `@near-wallet-selector`. No environment variable is required.
 
+## PolicyVault on testnet
+
+`contracts/policy-vault` is a Rust contract. It holds NEAR and it pays a receiver only when the method is allowed, the amount is inside the transaction cap, and the amount still fits the daily budget. The budget resets at the start of the next UTC day. Only the owner can change the policy, pause the vault, or withdraw. The agent function call key can call only `pay`. Its allowance is the gas budget.
+
+```bash
+cd keycage/contracts/policy-vault
+cargo test --features unit-testing
+cargo build --target wasm32-unknown-unknown --release
+```
+
+The wasm lands at `target/wasm32-unknown-unknown/release/policy_vault.wasm`.
+
+`node contracts/prove.mjs` from the `keycage` folder creates a fresh testnet vault with the public faucet, deploys that wasm, and runs the six spends. It writes keys only under `/tmp/keycage-near`. I do not commit those keys.
+
+The vault I already deployed is `kcvaultu7vylu.testnet`.
+
+https://testnet.nearblocks.io/address/kcvaultu7vylu.testnet
+
+The owner account is `kcownerwprb69.testnet`. The invoice, payroll, and vendor receivers are `kcinvoicevq0sat.testnet`, `kcpayrolll0lko3.testnet`, and `kcvendorb3jwhe.testnet`. The agent key is `ed25519:7CCF5HziPcVuUG8XSivCy3WWLmweWEKw21CX1LvoC6cM`. It can call only `pay` on the vault, with a 2 NEAR gas allowance.
+
+I ran the same six spends as the suite. Two succeeded. Four failed inside the contract.
+
+1. `ALLOWED` for 2.5 NEAR `pay_invoice`. https://testnet.nearblocks.io/txns/6CPPr9AYvzg5JBxAmWQZnPdPpQJ5VA6xFNNkmELs2oZQ
+2. `RECEIVER_DENIED` for `attacker.near`. https://testnet.nearblocks.io/txns/3Hbz9FarD8U8o48VxvV3S2ZB6ZBQxUw12dwZiKdgMctq
+3. `METHOD_DENIED` for `delete_account`. https://testnet.nearblocks.io/txns/AxEDQsSvLMqYQFGQNP8wbyFRHo1nNDbUSKo3D6wHJaF7
+4. `PER_TX_CAP` for 12 NEAR. https://testnet.nearblocks.io/txns/6duKuRDr91JjBth746EmabWYLi1SmXvnc9Zh68V3FWY6
+5. `ALLOWED` for 4 NEAR `run_payroll`. https://testnet.nearblocks.io/txns/6eisLmYfTHSBjHBKRCnVWGBX2tQmaKWKbh14u1E4uKzT
+6. `DAILY_CAP` for 5 NEAR. https://testnet.nearblocks.io/txns/EDTM7xgmbxGmJn7KYv9RUbmKy2PqLWPJSPKNi3BfHDoT
+
+The panel reads `get_policy` from that account and lists these hashes next to the simulated suite. A connected testnet wallet can sign another `pay` to the invoice receiver. The homepage attack suite and `POST /api/attack` stay simulated.
+
 ## Policy model
 
 `src/lib/policy.ts` is the fence.
@@ -75,9 +106,9 @@ A spend is allowed only when every check passes:
 1. `src/lib/policy.ts` holds the fence rules, the attack suite, and the key draft.
 2. `src/lib/presets.ts` holds the treasury, research, and ops starting policies.
 3. `src/lib/near.ts` reads public account and access key data.
-4. `src/app/api/attack/route.ts` runs the same evaluation over HTTP for a judge.
-5. `src/app/page.tsx` is the homepage. `src/app/panel/page.tsx` is the panel.
-6. The note in the contracts folder is how I would place the vault on chain.
+4. `contracts/policy-vault` is the testnet contract that enforces the fence.
+5. `src/app/api/attack/route.ts` runs the same evaluation over HTTP for a judge.
+6. `src/app/page.tsx` is the homepage. `src/app/panel/page.tsx` is the panel.
 
 ## License
 

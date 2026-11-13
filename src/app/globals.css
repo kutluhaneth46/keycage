@@ -1796,6 +1796,13 @@ textarea.field {
   font-weight: 600;
 }
 
+.vault-sub {
+  margin: 1.4rem 0 0;
+  font-size: 1.15rem;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+}
+
 .chain-account {
   display: flex;
   flex-wrap: wrap;
@@ -1821,6 +1828,11 @@ textarea.field {
   max-height: 28rem;
   overflow: auto;
   padding-right: 0.2rem;
+}
+
+.proof-list {
+  max-height: none;
+  overflow: visible;
 }
 
 .key-row {
