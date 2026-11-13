@@ -283,8 +283,8 @@ textarea {
 }
 
 .chips {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 8px;
   margin: 0;
   padding: 0;
@@ -292,7 +292,12 @@ textarea {
 }
 
 .chips li {
-  padding: 6px 11px;
+  grid-column: span 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 36px;
+  padding: 6px 8px;
   border: 1px solid rgba(0, 236, 151, 0.32);
   border-radius: 999px;
   background: rgba(0, 236, 151, 0.1);
@@ -300,6 +305,39 @@ textarea {
   font-size: 13px;
   font-weight: 650;
   line-height: 1.3;
+  text-align: center;
+}
+
+.chips li:nth-child(4) {
+  grid-column: 2 / span 2;
+}
+
+.chips li:nth-child(5) {
+  grid-column: 4 / span 2;
+}
+
+.hero-side {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  min-width: 0;
+}
+
+.hero-actions-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  align-items: stretch;
+}
+
+.hero-actions-grid .btn {
+  width: 100%;
+  height: 100%;
+  min-height: 48px;
+}
+
+.hero-actions .btn-hint {
+  margin: 8px 0 0;
 }
 
 .hero-actions.actions {
@@ -634,22 +672,24 @@ textarea {
 }
 
 .verdict-rail {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 8px;
   margin: 0;
   padding: 0;
   list-style: none;
+  align-items: stretch;
 }
 
 .verdict {
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: 6px;
-  flex: 1 1 148px;
+  height: 100%;
   min-width: 0;
   padding: 10px;
   border: 1px solid var(--line);
-  border-radius: 14px;
+  border-radius: 18px;
   background: rgba(0, 0, 0, 0.28);
   animation: row-in 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
@@ -689,9 +729,10 @@ textarea {
   grid-template-columns: auto 1fr;
   gap: 12px;
   align-items: start;
-  padding: 14px;
+  height: 100%;
+  padding: 16px;
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 16px;
+  border-radius: 18px;
   background: rgba(0, 0, 0, 0.22);
 }
 
@@ -724,7 +765,7 @@ textarea {
 }
 
 .section {
-  margin-top: 28px;
+  margin-top: 40px;
 }
 
 .section-head {
@@ -791,7 +832,10 @@ h2.section-title {
 
 .flow li {
   position: relative;
-  padding: 18px 18px 16px;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 18px;
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 18px;
   background: rgba(14, 18, 30, 0.92);
@@ -830,7 +874,7 @@ h2.section-title {
   flex-wrap: wrap;
   align-items: baseline;
   gap: 8px;
-  margin: 14px 0 0;
+  margin: auto 0 0;
   padding-top: 12px;
   border-top: 1px solid rgba(255, 255, 255, 0.08);
   color: var(--faint);
@@ -858,10 +902,11 @@ h2.section-title {
   flex-direction: column;
   align-items: flex-start;
   gap: 10px;
+  height: 100%;
   min-width: 0;
   padding: 20px;
   border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 20px;
+  border-radius: 18px;
   background:
     linear-gradient(180deg, rgba(20, 26, 40, 0.96), rgba(10, 14, 22, 0.96));
 }
@@ -1061,9 +1106,13 @@ textarea.field {
 }
 
 .count {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
   padding: 16px;
   border: 1px solid var(--line);
-  border-radius: 16px;
+  border-radius: 18px;
   background: var(--bg-inset);
 }
 
@@ -1256,6 +1305,12 @@ textarea.field {
   gap: 12px;
 }
 
+.reason {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
 .reason h3 {
   margin: 0;
   font-size: 18px;
@@ -1342,35 +1397,88 @@ textarea.field {
 
 .faq {
   display: grid;
-  gap: 10px;
-  margin-top: 16px;
+  gap: 12px;
 }
 
-.faq details {
+.faq-item {
   border: 1px solid rgba(196, 181, 253, 0.35);
-  border-radius: 14px;
+  border-radius: 18px;
   background: rgba(12, 16, 28, 0.92);
-  padding: 4px 16px;
+  overflow: hidden;
 }
 
-.faq details[open] {
-  border-color: rgba(0, 236, 151, 0.45);
+.faq-item.is-open {
+  border-color: rgba(0, 236, 151, 0.5);
 }
 
-.faq summary {
-  min-height: 52px;
-  display: flex;
+.faq-summary {
+  width: 100%;
+  min-height: 64px;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 14px;
   align-items: center;
+  padding: 12px 16px;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  text-align: left;
   cursor: pointer;
+}
+
+.faq-num {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  background: var(--green-dim);
+  color: var(--mint);
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.faq-q {
   font-size: 17px;
   font-weight: 650;
+  letter-spacing: -0.02em;
+  line-height: 1.35;
 }
 
-.faq details p {
-  margin: 0 0 14px;
+.faq-chevron {
+  width: 22px;
+  height: 22px;
+  color: var(--muted);
+  transition: transform 280ms ease;
+}
+
+.faq-item.is-open .faq-chevron {
+  transform: rotate(180deg);
+  color: var(--green);
+}
+
+.faq-panel {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 280ms ease;
+}
+
+.faq-item.is-open .faq-panel {
+  grid-template-rows: 1fr;
+}
+
+.faq-panel p {
+  overflow: hidden;
+  margin: 0;
+  padding: 0 16px 0 66px;
   color: var(--muted);
   font-size: 16px;
   line-height: 1.55;
+}
+
+.faq-item.is-open .faq-panel p {
+  padding-bottom: 16px;
 }
 
 .footer {
@@ -1378,9 +1486,9 @@ textarea.field {
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 12px 20px;
-  margin-top: 36px;
-  padding-top: 20px;
+  gap: 16px 24px;
+  margin-top: 48px;
+  padding: 22px 0 8px;
   border-top: 1px solid rgba(0, 236, 151, 0.28);
 }
 
@@ -1392,18 +1500,33 @@ textarea.field {
 
 .footer-links {
   display: flex;
-  flex-wrap: wrap;
-  gap: 14px 18px;
+  gap: 10px;
 }
 
-.footer a {
-  color: var(--green);
-  font-weight: 700;
+.footer-links a {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--line-strong);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text);
   text-decoration: none;
+  transition: border-color 160ms ease, color 160ms ease, background 160ms ease, transform 160ms ease;
 }
 
-.footer a:hover {
-  text-decoration: underline;
+.footer-links a:hover {
+  border-color: var(--green);
+  color: var(--green);
+  background: rgba(0, 236, 151, 0.1);
+  transform: translateY(-1px);
+}
+
+.footer-links svg {
+  width: 20px;
+  height: 20px;
+  display: block;
 }
 
 .missing {
@@ -1461,42 +1584,12 @@ textarea.field {
 
   .hero-grid {
     grid-template-columns: minmax(0, 1.05fr) minmax(320px, 0.95fr);
-    grid-template-areas:
-      "copy visual"
-      "meta visual"
-      "actions visual";
-    column-gap: 28px;
-    row-gap: 8px;
+    column-gap: 36px;
     align-items: center;
   }
 
-  .hero-copy {
-    grid-area: copy;
-  }
-
-  .hero-visual {
-    grid-area: visual;
-  }
-
-  .hero-meta {
-    grid-area: meta;
-  }
-
-  .hero-actions {
-    grid-area: actions;
-  }
-
-  .hero-actions.actions {
-    display: grid;
+  .checks {
     grid-template-columns: 1fr 1fr;
-    align-items: start;
-    max-width: 520px;
-    margin-top: 8px;
-  }
-
-  .hero-actions .btn,
-  .hero-actions .btn-stack {
-    width: 100%;
   }
 
   .flow {
@@ -1523,7 +1616,11 @@ textarea.field {
 
   .split {
     grid-template-columns: minmax(300px, 0.82fr) minmax(0, 1.18fr);
-    align-items: start;
+    align-items: stretch;
+  }
+
+  .split > .card {
+    height: 100%;
   }
 
   .card {
@@ -1532,9 +1629,30 @@ textarea.field {
 }
 
 @media (max-width: 979px) {
-  .hero-actions .btn,
-  .hero-actions .btn-stack {
-    width: 100%;
+  .hero-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  .hero-side {
+    display: contents;
+  }
+
+  .hero-lead {
+    order: 1;
+  }
+
+  .hero-visual {
+    order: 2;
+  }
+
+  .hero-actions {
+    order: 3;
+  }
+
+  .chips {
+    order: 4;
   }
 }
 
@@ -1599,8 +1717,28 @@ textarea.field {
     font-size: clamp(2.15rem, 11vw, 2.8rem);
   }
 
-  .case .btn {
+  .case .btn,
+  .hero-actions-grid {
     width: 100%;
+  }
+
+  .hero-actions-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .log-tools {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .log-tools .btn,
+  .event-count {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .event-count {
+    grid-column: 1 / -1;
   }
 
   .card,
@@ -1859,7 +1997,10 @@ textarea.field {
   }
 
   .fill,
-  .btn {
+  .btn,
+  .faq-panel,
+  .faq-chevron,
+  .footer-links a {
     transition: none;
   }
 

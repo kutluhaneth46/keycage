@@ -315,11 +315,51 @@ export default function Home() {
 
       <section className="hero">
         <div className="hero-grid">
-          <div className="hero-copy">
-            <p className="eyebrow">{t.eyebrow}</p>
-            <h1>{t.hero}</h1>
-            <p className="lede">{t.lede}</p>
-            <p className="local-note">{t.localNote}</p>
+          <div className="hero-side">
+            <div className="hero-lead">
+              <p className="eyebrow">{t.eyebrow}</p>
+              <h1>{t.hero}</h1>
+              <p className="lede">{t.lede}</p>
+              <p className="local-note">{t.localNote}</p>
+            </div>
+            <ul className="chips" aria-label={t.chipsLabel}>
+              <li>{t.chipReceivers}</li>
+              <li>{t.chipMethods}</li>
+              <li>{t.chipTx}</li>
+              <li>{t.chipDaily}</li>
+              <li>{t.chipGas}</li>
+            </ul>
+            <div className="hero-actions">
+              <div className="hero-actions-grid">
+                <button
+                  className="btn btn-primary"
+                  onClick={runLocalSuite}
+                  disabled={pending || serverBusy}
+                  type="button"
+                >
+                  {pending ? t.running : t.runSuite}
+                </button>
+                <button
+                  className="btn btn-ghost"
+                  onClick={runServerSuite}
+                  disabled={serverBusy || pending}
+                  type="button"
+                  aria-busy={serverBusy}
+                  aria-describedby="server-hint"
+                >
+                  {serverBusy ? t.running : t.runServer}
+                </button>
+                <a className="btn btn-ghost" href="#desk">
+                  {t.openDesk}
+                </a>
+                <a className="btn btn-ghost" href="#judge">
+                  {t.judgeLink}
+                </a>
+              </div>
+              <p id="server-hint" className="btn-hint mono">
+                {t.runServerHint}
+              </p>
+            </div>
           </div>
           <div className="hero-visual">
             <HeroCage
@@ -358,46 +398,6 @@ export default function Home() {
                 </>
               )}
             </div>
-          </div>
-          <div className="hero-actions actions">
-            <button
-              className="btn btn-primary"
-              onClick={runLocalSuite}
-              disabled={pending || serverBusy}
-              type="button"
-            >
-              {pending ? t.running : t.runSuite}
-            </button>
-            <div className="btn-stack">
-              <button
-                className="btn btn-ghost"
-                onClick={runServerSuite}
-                disabled={serverBusy || pending}
-                type="button"
-                aria-busy={serverBusy}
-                aria-describedby="server-hint"
-              >
-                {serverBusy ? t.running : t.runServer}
-              </button>
-              <span id="server-hint" className="btn-hint mono">
-                {t.runServerHint}
-              </span>
-            </div>
-            <a className="btn btn-ghost" href="#desk">
-              {t.openDesk}
-            </a>
-            <a className="btn btn-ghost" href="#judge">
-              {t.judgeLink}
-            </a>
-          </div>
-          <div className="hero-meta">
-            <ul className="chips" aria-label={t.chipsLabel}>
-              <li>{t.chipReceivers}</li>
-              <li>{t.chipMethods}</li>
-              <li>{t.chipTx}</li>
-              <li>{t.chipDaily}</li>
-              <li>{t.chipGas}</li>
-            </ul>
           </div>
         </div>
         <ol className="steps">
@@ -876,42 +876,106 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="section" aria-labelledby="faq-title">
+      <FaqList />
+
+      <SiteFooter />
+    </main>
+  );
+}
+
+function FaqList() {
+  const { t } = useI18n();
+  const [open, setOpen] = useState(0);
+  const items = [
+    ["01", t.faq1q, t.faq1a],
+    ["02", t.faq2q, t.faq2a],
+    ["03", t.faq3q, t.faq3a],
+    ["04", t.faq4q, t.faq4a],
+  ] as const;
+
+  return (
+    <section className="section" id="faq" aria-labelledby="faq-title">
+      <div className="section-head">
         <h2 className="section-title" id="faq-title">
           {t.faqTitle}
         </h2>
-        <div className="faq">
-          <details>
-            <summary>{t.faq1q}</summary>
-            <p>{t.faq1a}</p>
-          </details>
-          <details>
-            <summary>{t.faq2q}</summary>
-            <p>{t.faq2a}</p>
-          </details>
-          <details>
-            <summary>{t.faq3q}</summary>
-            <p>{t.faq3a}</p>
-          </details>
-          <details>
-            <summary>{t.faq4q}</summary>
-            <p>{t.faq4a}</p>
-          </details>
-        </div>
-      </section>
+        <p className="section-copy">{t.faqIntro}</p>
+      </div>
+      <div className="faq">
+        {items.map(([num, question, answer], index) => {
+          const isOpen = open === index;
+          return (
+            <div className={`faq-item${isOpen ? " is-open" : ""}`} key={num}>
+              <button
+                type="button"
+                className="faq-summary"
+                aria-expanded={isOpen}
+                onClick={() => setOpen(isOpen ? -1 : index)}
+              >
+                <span className="faq-num">{num}</span>
+                <span className="faq-q">{question}</span>
+                <svg className="faq-chevron" viewBox="0 0 24 24" aria-hidden="true">
+                  <path
+                    d="M6 9l6 6 6-6"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </button>
+              <div className="faq-panel" aria-hidden={!isOpen}>
+                <p>{answer}</p>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
 
-      <footer className="footer">
-        <p>{t.footerLine}</p>
-        <nav className="footer-links" aria-label="KutluhanETH">
-          <a href="https://kutluhaneth.com" target="_blank" rel="noreferrer">
-            kutluhaneth.com
-          </a>
-          <a href="https://x.com/kutluhaneth" target="_blank" rel="noreferrer">
-            x.com/kutluhaneth
-          </a>
-        </nav>
-      </footer>
-    </main>
+function SiteFooter() {
+  const { t } = useI18n();
+  return (
+    <footer className="footer">
+      <p>{t.footerLine}</p>
+      <nav className="footer-links" aria-label="KutluhanETH">
+        <a href="https://kutluhaneth.com" target="_blank" rel="noreferrer" aria-label={t.siteLabel}>
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" strokeWidth="1.8" />
+            <path
+              d="M3 12h18M12 3c2.4 2.7 3.6 5.7 3.6 9s-1.2 6.3-3.6 9c-2.4-2.7-3.6-5.7-3.6-9s1.2-6.3 3.6-9z"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.8"
+            />
+          </svg>
+        </a>
+        <a href="https://x.com/kutluhaneth" target="_blank" rel="noreferrer" aria-label={t.xLabel}>
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path
+              fill="currentColor"
+              d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.727-8.835L1.254 2.25H8.08l4.253 5.622L18.244 2.25zm-1.161 17.52h1.833L7.084 4.126H5.117z"
+            />
+          </svg>
+        </a>
+        <a
+          href="https://github.com/kutluhaneth46/keycage"
+          target="_blank"
+          rel="noreferrer"
+          aria-label={t.gitLabel}
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path
+              fill="currentColor"
+              d="M12 .5C5.73.5.5 5.73.5 12.02c0 5.09 3.29 9.4 7.86 10.93.58.1.79-.25.79-.56 0-.28-.01-1.02-.02-2-3.2.7-3.88-1.54-3.88-1.54-.53-1.34-1.28-1.7-1.28-1.7-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.2 1.77 1.2 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.23-1.28-5.23-5.7 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.18 1.18a11 11 0 0 1 5.8 0c2.2-1.49 3.17-1.18 3.17-1.18.64 1.59.24 2.76.12 3.05.74.81 1.18 1.84 1.18 3.1 0 4.43-2.69 5.41-5.25 5.69.41.36.78 1.06.78 2.14 0 1.55-.01 2.8-.01 3.18 0 .31.21.67.8.56A11.52 11.52 0 0 0 23.5 12C23.5 5.73 18.27.5 12 .5z"
+            />
+          </svg>
+        </a>
+      </nav>
+    </footer>
   );
 }
 
